@@ -1,0 +1,14 @@
+fastapi==0.95.2
+uvicorn==0.22.0
+spacy==3.4.4
+beautifulsoup4==4.11.2
+requests==2.28.2
+psycopg2-binary==2.9.5
+pymongo==4.2.0
+sqlalchemy==1.4.44
+qdrant-client==1.2.0
+sentence-transformers==2.2.2
+openai==0.28
+transformers==4.26.1
+streamlit==1.20.0
+python-dotenv==0.21.0
