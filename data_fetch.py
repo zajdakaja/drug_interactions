@@ -1,18 +1,16 @@
-#Zajmuje się pobieraniem (fetchowaniem) danych z zewnętrznych źródeł, np. z publicznego API FDA lub z innego miejsca w internecie.
-
 import requests
 
 FDA_ENDPOINT = "https://api.fda.gov/drug/label.json"
 
 """
-przykładowa funkcja, która łączy się z API FDA, 
-wyszukuje lek o podanej nazwie (w polu brand_name) i pobiera informacje takie jak opis, 
-ostrzeżenia itp.
+example function that connects to the FDA API, 
+searches for a drug with the given name (in the brand_name field) and retrieves information such as description, 
+warnings, etc..
 """
 def fetch_drug_data_fda(drug_name: str) -> dict:
     """
-    Pobiera dane o leku z publicznego API FDA (uproszczony przykład).
-    Zwraca dict z informacjami o leku.
+    Retrieves drug data from the FDA public API (simplified example).
+    Returns a dict with information about the drug.
     """
     try:
         params = {
@@ -24,7 +22,7 @@ def fetch_drug_data_fda(drug_name: str) -> dict:
         data = response.json()
         return data
     except Exception as e:
-        print(f"Błąd pobierania danych z FDA: {e}")
+        print(f"FDA download error: {e}")
         return {}
     
 
