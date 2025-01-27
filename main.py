@@ -7,17 +7,17 @@ from pydantic import BaseModel
 from typing import List, Optional
 import os
 
-# Import funkcji z plików pomocniczych
-from app.data_fetch import fetch_drug_data_fda  # przykładowa funkcja
+# Importing functions from support files
+from app.data_fetch import fetch_drug_data_fda  # sample function
 from app.data_store import save_drug_postgres, save_article_mongo
 from app.llm_integration import get_drug_recommendations
-from app.vector_search import search_similar_articles  # jeśli chcesz Qdrant
-# Ewentualnie: from app.data_store import get_all_drugs (jeśli taką funkcję masz)
+from app.vector_search import search_similar_articles  # if you want Qdrant
+# alternatively: from app.data_store import get_all_drugs (if you have such a function)
 
 app = FastAPI()
 
 #############################
-# MODELE DANYCH (Pydantic)
+# DATA MODELS (Pydantic)
 #############################
 
 class DrugListRequest(BaseModel):
@@ -36,29 +36,29 @@ class SearchRequest(BaseModel):
 @app.post("/check_interactions")
 def check_interactions(request: DrugListRequest):
     """
-    Endpoint analizujący interakcje między lekami w 'drug_list'.
-    1) Pobiera dane z FDA dla pierwszego leku (przykładowo).
-    2) Zapisuje opis do Postgres.
-    3) Wywołuje GPT po rekomendacje.
-    4) Zwraca JSON z opisem i rekomendacjami.
+    Endpoint analysing drug interactions in ‘drug_list’.
+    1) Retrieves data from the FDA for the first drug (example).
+    2) Saves the description to Postgres.
+    3) Calls GPT for recommendations.
+    4) Returns JSON with description and recommendations.
     """
     if not request.drug_list:
         return {"drug": None, "description": "", "recommendations": "Brak leków w zapytaniu"}
 
     drug_name = request.drug_list[0]
 
-    # 1) Pobieramy dane z FDA
-    raw_data = fetch_drug_data_fda(drug_name)  # może zwrócić dict lub pusty {}
-    # Uproszczenie: wyciągamy opis
+    # 1) Downloading data from the FDA
+    raw_data = fetch_drug_data_fda(drug_name)  # may return a dict or an empty {}
+    # Simplification: we extract the description
     try:
         description = raw_data["results"][0].get("description", [""])[0]
     except (IndexError, KeyError):
         description = ""
 
-    # 2) Zapis do Postgres (nazwę leku + opis)
+    # 2) Entry into Postgres (drug name + description)
     save_drug_postgres(drug_name, description)
 
-    # 3) GPT-4: generowanie rekomendacji
+    # 3) GPT-4: generation of recommendations
     recommendations = get_drug_recommendations(request.drug_list, description)
 
     return {
@@ -73,19 +73,19 @@ def check_interactions(request: DrugListRequest):
 @app.post("/save_article")
 def save_article(req: ArticleRequest):
     """
-    Endpoint do zapisu artykułu w MongoDB (kolekcja 'articles').
-    Zwraca ID zapisanego dokumentu.
+    Endpoint to save an article in MongoDB (collection ‘articles’).
+    Returns the ID of the saved document.
     """
     article_text = req.article_text.strip()
     if not article_text:
-        return {"inserted_id": None, "error": "Pusty tekst artykułu"}
+        return {"inserted_id": None, "error": "Blank article text"}
 
     try:
-        # wywołanie funkcji z data_store.py
+       # call function from data_store.py
         save_article_mongo(article_text)
-        # Niestety, save_article_mongo nie zwraca inserted_id (chyba że ją zmodyfikujesz)
-        # By to zwrócić, można zwrócić wartość z insert_one().inserted_id
-        return {"inserted_id": "DummyID"}  # dopasuj do własnej implementacji
+        # Unfortunately, save_article_mongo does not return an inserted_id (unless you modify it)
+        # To return this, you can return the value from insert_one().inserted_id
+        return {"inserted_id": "DummyID"}  # match your own implementation
     except Exception as e:
         return {"inserted_id": None, "error": str(e)}
 
@@ -95,13 +95,13 @@ def save_article(req: ArticleRequest):
 @app.post("/search_articles")
 def search_articles(req: SearchRequest):
     """
-    Endpoint do wyszukiwania wektorowego (np. w Qdrant).
-    Zwraca listę artykułów (np. tytuł, fragment) w kolejności podobieństwa.
+    Endpoint for vector search (e.g. in Qdrant).
+    Returns a list of articles (e.g. title, excerpt) in order of similarity.
     """
     try:
-        results = search_similar_articles(req.query, limit=req.limit)  # tu wchodzi Qdrant
-        # Przykładowa struktura:
-        # results może być listą obiektów: [{"score":..., "text":...}, ...]
+        results = search_similar_articles(req.query, limit=req.limit)  # here comes Qdrant
+        # exemplary structure:
+        # results can be a list of objects: [{"score":..., "text":...}, ...]
         return results
     except Exception as e:
         return {"error": str(e)}
@@ -112,8 +112,8 @@ def search_articles(req: SearchRequest):
 @app.get("/list_drugs")
 def list_drugs():
     """
-    Endpoint do pobrania wszystkich leków z tabeli 'drugs' w Postgres.
-    Zwraca listę obiektów JSON.
+    Endpoint to retrieve all drugs from the ‘drugs’ table in Postgres.
+    Returns a list of JSON objects.
     """
     import psycopg2
     from psycopg2.extras import RealDictCursor
@@ -126,7 +126,7 @@ def list_drugs():
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("SELECT id, drug_name, interactions FROM drugs ORDER BY id DESC")
                 rows = cur.fetchall()
-        # rows będzie listą słowników [{'id':..., 'drug_name':..., 'interactions':...}, ...]
+        # rows will be a list of dictionaries [{'id':..., 'drug_name':..., 'interactions':...}, ...]
         return rows
     except Exception as e:
         return {"error": str(e)}
