@@ -2,124 +2,124 @@ import streamlit as st
 import requests
 
 #####################
-# KONFIGURACJA
+# CONFIGURATION
 #####################
-# Zakładamy, że API FastAPI działa lokalnie na porcie 8000
+# We assume that the FastAPI API is running locally on port 8000
 API_URL = "http://127.0.0.1:8000"
 
 def main():
-    # Ustawiamy tytuł aplikacji
-    st.title("Analiza Interakcji Leków – Prototyp")
+    # Set the title of the application
+    st.title("Drug Interaction Analysis - Prototype")
 
-    # Tworzymy boczne menu (sidebar) z wyborem sekcji
+    # We create a sidebar menu with a selection of sections
     menu = [
-        "Sprawdź interakcje leków",
-        "Dodaj artykuł do MongoDB",
-        "Wyszukiwanie wektorowe (Qdrant)",
-        "Wyświetl historię leków (Postgres)"
+        ‘Check drug interactions’,
+        ‘Add article to MongoDB’,
+        ‘Vector search (Qdrant)’,
+        ‘View drug history (Postgres)’.
     ]
-    choice = st.sidebar.selectbox("Wybierz funkcjonalność", menu)
+    choice = st.sidebar.selectbox("Select functionality", menu)
 
     ######################################################
-    # SEKCJA 1: Sprawdź interakcje leków
+    # SECTION 1: Check drug interactions
     ######################################################
-    if choice == "Sprawdź interakcje leków":
-        st.subheader("Sekcja: Sprawdź interakcje leków")
+    if choice == "Check drug interactions:":
+        st.subheader("Section: Check drug interactions")
 
-        # Pole tekstowe do wprowadzenia listy leków
-        drugs_input = st.text_input("Podaj nazwy leków, oddzielone przecinkami", value="Ibuprofen, Aspirin")
+        # Text field for entering a list of medicines
+        drugs_input = st.text_input("Give the names of the drugs, separated by commas.", value="Ibuprofen, Aspirin")
 
-        if st.button("Sprawdź"):
-            # Przykład: konwersja na listę
+        if st.button("Check"):
+            # Example: conversion to a list
             drug_list = [d.strip() for d in drugs_input.split(",") if d.strip()]
 
-            # Wywołanie endpointu FastAPI (POST /check_interactions)
+            # FastAPI endpoint call (POST /check_interactions)
             payload = {"drug_list": drug_list}
             try:
                 response = requests.post(f"{API_URL}/check_interactions", json=payload)
                 if response.status_code == 200:
                     data = response.json()
-                    # Wyświetlamy wynik
-                    st.write("**Lek (pierwszy z listy)**:", data.get("drug"))
-                    st.write("**Opis (z FDA lub innego źródła)**:", data.get("description", "Brak opisu"))
-                    st.write("**Rekomendacje AI**:", data.get("recommendations", "Brak rekomendacji"))
+                    # Display the result
+                    st.write("**Drug (first on the list)**:", data.get("drug"))
+                    st.write("**Description (from FDA or other source)**:", data.get("description", "No description"))
+                    st.write("**AI recommendations**:", data.get("recommendations", "No recommendations"))
                 else:
-                    st.error(f"Błąd {response.status_code} – nie udało się sprawdzić interakcji.")
+                    st.error(f"Error {response.status_code} – interaction could not be tested.")
             except Exception as e:
-                st.error(f"Wystąpił błąd: {e}")
+                st.error(f"Error occurred: {e}")
 
     ######################################################
-    # SEKCJA 2: Dodaj artykuł do MongoDB
+    # SECTION 2: Add the article to MongoDB
     ######################################################
-    elif choice == "Dodaj artykuł do MongoDB":
-        st.subheader("Sekcja: Dodaj artykuł do MongoDB")
+    elif choice == "Add the article to MongoDB":
+        st.subheader("Section: Add the article to MongoDB")
 
-        # Pole tekstowe do wprowadzenia treści artykułu
-        article_text = st.text_area("Wklej treść artykułu (dowolny tekst)")
+        # Text field for entering article content
+        article_text = st.text_area("Paste article content (any text)")
 
-        if st.button("Zapisz w MongoDB"):
-            # Tu możemy wywołać endpoint FastAPI, np. POST /save_article
-            # lub bezpośrednio użyć funkcji z data_store.py (jeśli mamy import).
-            # Przykład wywołania endpointu (zakładamy, że istnieje /save_article):
+        if st.button("Save in MongoDB"):
+            # Here we can call a FastAPI endpoint, e.g. POST /save_article
+            # or directly use the function from data_store.py (if we have an import).
+            # Example of an endpoint call (we assume /save_article exists):
             payload = {"article_text": article_text}
             try:
                 response = requests.post(f"{API_URL}/save_article", json=payload)
                 if response.status_code == 200:
                     data = response.json()
-                    st.success(f"Zapisano artykuł w MongoDB, ID = {data.get('inserted_id')}")
+                    st.success(f"An article has been saved in MongoDB, ID = {data.get('inserted_id')}")
                 else:
-                    st.error(f"Błąd {response.status_code} – nie udało się zapisać artykułu.")
+                    st.error(f"Error {response.status_code} – failed to save the article.")
             except Exception as e:
-                st.error(f"Wystąpił błąd: {e}")
+                st.error(f"An error occurred: {e}")
 
     ######################################################
-    # SEKCJA 3: Wyszukiwanie wektorowe (Qdrant)
+    # SECTION 3: Vector search (Qdrant)
     ######################################################
-    elif choice == "Wyszukiwanie wektorowe (Qdrant)":
-        st.subheader("Sekcja: Wyszukiwanie wektorowe")
+    elif choice == "Vector Search (Qdrant)":
+        st.subheader("Section: Vector Search")
 
-        # Pole na zapytanie semantyczne
-        query_text = st.text_input("Czego szukasz w artykułach?", value="Interakcje ibuprofenu z innymi lekami")
+        # Field for semantic query
+        query_text = st.text_input("What do you look for in articles?", value="Interactions of ibuprofen with other drugs")
 
-        if st.button("Szukaj"):
-            # Tu możesz wywołać endpoint FastAPI typu POST /search_articles
-            # lub bezpośrednio importować funkcję search_similar_articles(...)
+        if st.button("Search"):
+            # Here you can call the FastAPI endpoint POST type /search_articles
+            # or directly import the search_similar_articles(...) function
             payload = {"query": query_text, "limit": 3}
             try:
                 response = requests.post(f"{API_URL}/search_articles", json=payload)
                 if response.status_code == 200:
                     results = response.json()
-                    st.write("**Najbardziej podobne artykuły:**")
+                    st.write("**Most related articles:**")
                     for r in results:
                         # np. r = {"score":..., "text":...}
                         st.write(f"- **Score**: {r.get('score')}")
-                        st.write(f"  Treść artykułu: {r.get('text')[:300]}...")
+                        st.write(f"  Article content: {r.get('text')[:300]}...")
                 else:
-                    st.error(f"Błąd {response.status_code} – nie udało się wyszukać artykułów.")
+                    st.error(f"Błąd {response.status_code} – failed to search for articles.")
             except Exception as e:
-                st.error(f"Wystąpił błąd: {e}")
+                st.error(f"An error occurred: {e}")
 
     ######################################################
-    # SEKCJA 4: Wyświetl historię leków (Postgres)
+    # SECTION 4: View medication history (Postgres)
     ######################################################
-    else:  # "Wyświetl historię leków (Postgres)"
-        st.subheader("Sekcja: Wyświetl historię leków")
-
-        # Przycisk do wywołania SELECT * FROM drugs
-        if st.button("Pokaż wszystkie leki"):
-            # Można to zrobić przez endpoint np. /list_drugs
-            # lub bezpośrednio z data_store (jeśli mamy import i dostęp do read_all_drugs())
+    else:  # "Display drug history (Postgres)"
+        st.subheader("Section: Display drug history (Postgres)")
+        
+        # Button to call SELECT * FROM drugs
+        if st.button("Show all drugs"):
+            # This can be done via endpoint e.g. /list_drugs
+            # or directly from the data_store (if we have import and access to read_all_drugs())
             try:
                 response = requests.get(f"{API_URL}/list_drugs")
                 if response.status_code == 200:
-                    drugs_data = response.json()  # zakładamy, że to jest lista obiektów
-                    st.write("**Lista leków w bazie:**")
+                    drugs_data = response.json()  # we assume that this is a list of objects
+                    st.write("**List of drugs in the database:**")
                     for item in drugs_data:
-                        st.write(f"- ID: {item.get('id')} | Nazwa: {item.get('drug_name')} | Opis: {item.get('interactions')}")
+                        st.write(f"- ID: {item.get('id')} | Name: {item.get('drug_name')} | Description: {item.get('interactions')}")
                 else:
-                    st.error(f"Błąd {response.status_code} – nie udało się pobrać historii leków.")
+                    st.error(f"Error {response.status_code} – failed to retrieve drug history.")
             except Exception as e:
-                st.error(f"Wystąpił błąd: {e}")
+                st.error(f"Error occurred: {e}")
 
 
 if __name__ == "__main__":
