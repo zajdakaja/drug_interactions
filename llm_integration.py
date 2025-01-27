@@ -1,11 +1,11 @@
-# Zawiera kod do integracji z dużym modelem językowym (np. GPT-4 przez API OpenAI).
+# Includes code for integration into a large language model (e.g. GPT-4 via the OpenAI API).
 
 import os
 import json
 import openai
 
 def load_api_key():
-    # Pobierz ścieżkę do katalogu nadrzędnego
+    # Get path to parent directory
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     file_path = os.path.join(base_dir, "env", "api_key.json")
     
@@ -14,22 +14,22 @@ def load_api_key():
             data = json.load(f)
         return data["api_key"]
     except FileNotFoundError:
-        print(f"Nie znaleziono pliku: {file_path}")
+        print(f"File not found: {file_path}")
         raise
     except KeyError:
-        print("Klucz 'api_key' nie został znaleziony w pliku JSON.")
+        print("Key ‘api_key’ not found in JSON file.")
         raise
 
 api_key = load_api_key()
 openai.api_key = api_key
 
-# Główna funkcja, która buduje prompt (tekstowe polecenie) i wysyła zapytanie do GPT.
+# The main function that builds the prompt (text command) and sends the query to the GPT.
 def get_drug_recommendations(drug_list, interactions):
     prompt = f"""
-    Jesteś asystentem medycznym. Analizujesz interakcje leków: {drug_list}.
-    Opis interakcji:
+    You are a medical assistant. You analyse drug interactions: {drug_list}.
+    Description of interactions:
     {interactions}
-    Jakie są potencjalne zagrożenia i co byś zalecił pacjentowi?
+    What are the potential risks and what would you recommend to the patient?
     """
 
     try:
@@ -40,5 +40,5 @@ def get_drug_recommendations(drug_list, interactions):
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        print(f"Błąd wywołania GPT-4: {e}")
-        return "Błąd generowania rekomendacji."
+        print(f"GPT-4 callout error: {e}")
+        return "Recommendation generation error."
