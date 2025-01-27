@@ -1,22 +1,22 @@
-# Odpowiada za zapisywanie i odczytywanie danych z baz (relacyjnych oraz nierelacyjnych).
+# Responsible for writing and reading data from databases (relational and non-relational).
 
 import os
 import psycopg2
 import pymongo
 from dotenv import load_dotenv
 
-# Wczytaj zmienne środowiskowe z pliku .env
+# Load environment variables from the .env file
 load_dotenv()
 
-# wczytuje parametry połączenia (host, user, password, dbname).
+# loads the connection parameters (host, user, password, dbname).
 def get_postgres_config():
     """
-    Pobiera konfigurację PostgreSQL z pliku .env lub zmiennych środowiskowych.
+ Retrieves the PostgreSQL configuration from the .env file or environment variables.
     """
     required_keys = ["POSTGRES_HOST", "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD"]
     missing_keys = [key for key in required_keys if not os.getenv(key)]
     if missing_keys:
-        raise EnvironmentError(f"Brakuje następujących zmiennych środowiskowych: {', '.join(missing_keys)}")
+        raise EnvironmentError(f"The following environment variables are missing: {', '.join(missing_keys)}")
     
     return {
         'host': os.getenv("POSTGRES_HOST"),
@@ -27,14 +27,14 @@ def get_postgres_config():
 
 def get_mongo_uri():
     """
-    Pobiera URI MongoDB z pliku .env lub używa wartości domyślnej.
+    Retrieves the MongoDB URI from the .env file or uses the default value.
     """
     return os.getenv("MONGO_URI", "mongodb://localhost:27017")
 
-#  Dodaje wpis o leku do tabeli drugs w bazie Postgres.
+# Adds a drug entry to the drugs table in the Postgres database.
 def save_drug_postgres(drug_name: str, interactions: str):
     """
-    Zapisuje informację o leku do tabeli 'drugs' w PostgreSQL.
+    Saves the drug information to the ‘drugs’ table in PostgreSQL.
     """
     try:
         db_config = get_postgres_config()
@@ -47,14 +47,14 @@ def save_drug_postgres(drug_name: str, interactions: str):
                 """
                 cursor.execute(insert_query, (drug_name, interactions))
                 new_id = cursor.fetchone()[0]
-                print(f"Zapisano do PostgreSQL, ID = {new_id}")
+                print(f"Saved to PostgreSQL, ID = {new_id}")
     except Exception as e:
-        print(f"Błąd podczas zapisu do PostgreSQL: {e}")
+        print(f"Error while writing to PostgreSQL: {e}")
 
-#  Zapisuje tekst artykułu do kolekcji w MongoDB.
+# Saves the article text to a collection in MongoDB.
 def save_article_mongo(article_text: str):
     """
-    Zapisuje artykuł do kolekcji 'articles' w bazie 'drug_mongo'.
+    Saves the article to the ‘articles’ collection in the ‘drug_mongo’ database.
     """
     try:
         mongo_uri = get_mongo_uri()
@@ -63,17 +63,17 @@ def save_article_mongo(article_text: str):
         collection = db["articles"]
         doc = {"content": article_text}
         result = collection.insert_one(doc)
-        print(f"Zapisano artykuł w MongoDB, ID = {result.inserted_id}")
+        print(f"The article was saved in MongoDB, ID = {result.inserted_id}")
     except Exception as e:
-        print(f"Błąd podczas zapisu do MongoDB: {e}")
+        print(f"Error while writing to MongoDB: {e}")
 
 if __name__ == "__main__":
-    # Przykład użycia funkcji
+    # Example of use of the function
     try:
-        print("Testowanie połączenia z PostgreSQL...")
-        save_drug_postgres("Aspiryna", "Możliwe interakcje z Ibuprofenem")
+        print("Testing the connection to PostgreSQL.....")
+        save_drug_postgres("Aspirin", "Possible interactions with Ibuprofen")
         
-        print("Testowanie połączenia z MongoDB...")
-        save_article_mongo("Artykuł testowy dotyczący interakcji leków.")
+        print("Testing the connection to MongoDB...")
+        save_article_mongo("Test article on drug interactions.")
     except Exception as error:
-        print(f"Napotkano błąd: {error}")
+        print(f"Error encountered: {error}")
